@@ -42,5 +42,54 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+      /* if (zx == 1) set x = 0 and if (nx == 1) set x = !x   */
+
+      Mux16 (a=x, b[0..15]=false, sel=zx, out=xMuxZeros);
+      Not16 (in=xMuxZeros, out=notx);
+      Mux16 (a=xMuxZeros, b=notx, sel=nx, out=xMuxNotx);
+
+      
+      
+      /* if (zy == 1) set y = 0 and if (ny == 1) set y = !y  */
+
+      Mux16 (a=y, b[0..15]=false, sel=zy, out=yMuxZeros);
+      Not16 (in=yMuxZeros, out=noty);
+      Mux16 (a=yMuxZeros, b=noty, sel=ny, out=yMuxNoty);
+
+      
+      
+      /* if (f == 1)  set out = x + y else set out = x & y  */
+
+      Add16(a=xMuxNotx, b=yMuxNoty, out=xAddy);
+      And16(a=xMuxNotx, b=yMuxNoty, out=xAndy);
+      Mux16 (a=xAndy, b=xAddy, sel=f, out=func);
+
+      
+      
+      /*  if (no == 1) set out = !out   */
+
+      Not16 (in=func, out=notfunc);
+      Mux16 (a=func, b=notfunc, sel=no, out[0..7]=outputLSByte, out[8..15]=outputMSByte, out[15]=signBit);
+
+      
+      
+      /* if (out == 0) set zr = 1   */
+
+      Or8Way  (in= outputLSByte, out=r1);
+      Or8Way  (in= outputMSByte, out=r2);
+      Or      (a=r1, b=r2, out= notzero);
+      Not     (in=notzero, out=zr);
+
+      
+      
+      /*  if (out < 0) set ng = 1   */
+
+      And     (a=signBit, b=true, out=ng);
+
+      
+      
+      /* concatenate the bytes into the output */
+      
+      And16    (a[0..7]=outputLSByte, a[8..15]=outputMSByte, b[0..15]=true, out=out);
+
 }
