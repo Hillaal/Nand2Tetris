@@ -27,5 +27,29 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+       // DMux4Way(in=true, sel = address[13..14], a=dataSel, b=screenSel, c=KBDSel, d=unused); 
+
+        DMux(in=true, sel=address[14], a=dataSel, b=ioSel);
+        DMux(in=ioSel, sel=address[13], a=screenSel, b=KBDSel);
+
+        // Data
+        And(a=load, b=dataSel, out=dataLoad);
+        RAM16K(in=in, load=dataLoad, address=address[0..13], out=dataOut);
+
+        // Screen
+        DMux(in=screenSel, sel=address[12], a=screenLowSel, b=screenHighSel);
+        And(a=load, b=screenLowSel, out=screenLowLoad);
+        And(a=load, b=screenHighSel, out=screenHighLoad);
+        RAM4K(in=in, load=screenLowLoad, address=address[0..11], out=screenLowOut);
+        RAM4K(in=in, load=screenHighLoad, address=address[0..11], out=screenHighOut);
+        Mux16(a=screenLowOut, b=screenHighOut, sel=screenHighSel, out=screenOut);
+       
+        // Keyboard
+        And(a=load, b=KBDSel, out=KBDLoad);
+        Register(in=in, load=KBDLoad, out=KBDOut);
+        
+        Mux16(a=screenOut, b=KBDOut, sel=KBDSel, out=ioOut);
+        Mux16(a=dataOut, b=ioOut, sel=ioSel, out=out);
+
+        //Mux4Way16 (a=dataOut, b=screenOut, c=KBDOut, d=true,sel=address[13..14], out=out);
 }
