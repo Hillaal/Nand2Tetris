@@ -4,10 +4,10 @@
 // File name: projects/06/add/Add.asm
 
 // Computes R0 = 2 + 3  (R0 refers to RAM[0])
-
-@2
-D=A
+(LABEL)
+@2              //trailcomment
+D=A;JMP
 @3
 D=D+A
 @0
-M=D
+M=D             //trailcomment
